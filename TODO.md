@@ -1,6 +1,4 @@
-"disposed" bindings müssen aussortiert werden
-
-ein Signal sollte Options entgegennehmen
+## Signal Options
 
 - stopEmit - eine Direktive, die bestimmt, in welchen Fällen ein emit() tatsächlich zur Ausführung kommt
   - never (default) - egal was irgendwelche Handler zurückliefern, emit() wird immer durchgeführt
@@ -9,3 +7,10 @@ ein Signal sollte Options entgegennehmen
 
 - listenerSuccessTest - eine Methode, die beschreibt, wann ein Handler als Success gilt
   - default: (val) => { return val === true || typeof val === "undefined"}
+
+
+
+Options implementieren
+Tests schreiben
+Readme schreiben
+Option für ComputedSignals?
