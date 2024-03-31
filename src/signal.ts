@@ -6,16 +6,11 @@ import { TBinding, createBinding } from "./binding"
 /**
  * Ein WriteableSignal ist ein Signal, dessen Wert man aktiv setzen kann
  */
-type TWriteableSignal<T> = TSignal & {
+type TWriteableSignal<T> = TSignal<T> & {
     /**
      * der Setter für das Signal
      */
-    (value: T): void;
-
-    /**
-     * der Getter für das Signal
-     */
-    (): T;
+    dispatch: (value: T) => void;
 };
 
 /**
@@ -23,10 +18,14 @@ type TWriteableSignal<T> = TSignal & {
  * @param initialValue initialer Wert
  * @returns ein TWriteableSignal
  */
-function signal<T>(initialValue?: T): TWriteableSignal<T> {
+function signal<T = unknown>(initialValue?: T): TWriteableSignal<T> {
     let _value: T = initialValue;
     let _bindings: TBinding[] = [];
     let _state: "working" | "suspended" | "disposed" = "working";
+
+    const SIGNAL = function (value?: T) {
+        return _value
+    }
 
     // informiert alle Bindings über die neue Wertänderung
     function notify(value, oldValue) {
@@ -40,16 +39,12 @@ function signal<T>(initialValue?: T): TWriteableSignal<T> {
         }
     }
 
-    const SIGNAL = function (value?: T) {
-        if (arguments.length) { //Setter
-            if (_state === "disposed" || _state === "suspended") { return; }
-            const oldValue = _value;
-            _value = value as T;
-            notify(_value, oldValue);
-            return;
-        } else { //Getter
-            return _value
-        }
+    SIGNAL.dispatch = (value?: T) => {
+        if (_state === "disposed" || _state === "suspended") { return; }
+        const oldValue = _value;
+        _value = value as T;
+        notify(_value, oldValue);
+        return;
     }
 
     SIGNAL.bind = (handler: Function, instant = true): TBinding => {
@@ -91,6 +86,10 @@ function signal<T>(initialValue?: T): TWriteableSignal<T> {
     SIGNAL.resume = (): void => { // ok 
         if (_state !== "disposed")
             _state = "working";
+    }
+
+    SIGNAL.state = (): "working" | "suspended" | "disposed" => {
+        return _state;
     }
 
     return SIGNAL;

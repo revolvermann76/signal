@@ -3,7 +3,7 @@ import { TBinding } from "./binding";
 /**
  * Ein Signal ist ein reatives Element zur Datenhaltung
  */
-type TSignal = {
+type TSignal<T> = {
     /**
      * Stellt ein Binding zu einem Signal her
      * @param Function handler - Ein Handler der jedes Mal gerufen wird, wenn das Signal einen neuen Wert bekommt
@@ -26,11 +26,12 @@ type TSignal = {
 
     resume: () => void;
 
+    state: () => "working" | "suspended" | "disposed";
 
     /**
      * der Getter liefert den Wert des Signals
      */
-    (): unknown;
+    (): T;
 }
 
 export { TSignal }
