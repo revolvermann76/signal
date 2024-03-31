@@ -2,7 +2,7 @@
 
 ein Signal sollte Options entgegennehmen
 
-- stop-propagation - eine Direktive, die bestimmt, in welchen Fällen ein emit() tatsächlich zur Ausführung kommt
+- stopEmit - eine Direktive, die bestimmt, in welchen Fällen ein emit() tatsächlich zur Ausführung kommt
   - never (default) - egal was irgendwelche Handler zurückliefern, emit() wird immer durchgeführt
   - fail-any - wenn nur ein Handler failed, wird der emit() nicht ausgeführt
   - fail-all - nur wenn alle Handler failen, wird der emit() nicht ausgeführt

@@ -8,15 +8,30 @@ type TWriteableSignal<T> = TSignal<T> & {
     emit: (value: T) => void;
 };
 
+type TSignalOptions = {
+    stopEmit?: "never" | "fail-any" | "fail-all";
+    handlerSuccessTest?: (unknown) => boolean;
+}
+
+const defaultHandlerSuccessTest = (val) => {
+    return val === true || typeof val === "undefined";
+}
+
 /**
  * Function to create a WriteableSignal
  * @param initialValue initial value
+ * @param options 
  * @returns a TWriteableSignal
  */
-function signal<T = unknown>(initialValue?: T): TWriteableSignal<T> {
+function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWriteableSignal<T> {
+
     let _value: T = initialValue;
     let _bindings: TBinding[] = [];
     let _state: TSignalState = "working";
+
+    options = options || {};
+    options.stopEmit = options.stopEmit || "never";
+    options.handlerSuccessTest = options.handlerSuccessTest || defaultHandlerSuccessTest;
 
     /**
      * Returns the value of the signal
