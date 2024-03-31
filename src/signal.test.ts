@@ -16,10 +16,10 @@ describe('testing signal', () => {
         expect(s()).toBe(testValue);
     });
 
-    test('dispatched a signal and read the same value', () => {
+    test('emited a signal and read the same value', () => {
         const s = signal();
         const testValue = "Whatever";
-        s.dispatch(testValue);
+        s.emit(testValue);
         expect(s()).toBe(testValue);
     });
 
@@ -30,7 +30,7 @@ describe('testing signal', () => {
             s.bind(value => {
                 res(value);
             }, false)
-            s.dispatch(testValue);
+            s.emit(testValue);
         })).then(data => {
             expect(data).toBe(testValue);
         });
@@ -51,7 +51,7 @@ describe('testing computed', () => {
     });
 
     test('computed updates correctly', () => {
-        s2.dispatch(4);
+        s2.emit(4);
         expect(c()).toBe(16);
     });
 
@@ -61,7 +61,7 @@ describe('testing computed', () => {
             c.bind(value => {
                 res(value);
             }, false)
-            s1.dispatch(2);
+            s1.emit(2);
         })).then(data => {
             expect(data).toBe(8);
         });
