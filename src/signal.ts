@@ -1,20 +1,17 @@
-
 import { TSignal, TSignalState } from "./TSignal";
-import { TBinding, createBinding } from "./binding"
-
+import { TBinding, createBinding } from "./binding";
 
 /**
- * Ein WriteableSignal ist ein Signal, dessen Wert man aktiv setzen kann
+ * A WriteableSignal is a signal whose value can be actively set
  */
 type TWriteableSignal<T> = TSignal<T> & {
-
     emit: (value: T) => void;
 };
 
 /**
- * Funktion zum Erstellen eines WriteableSignal
- * @param initialValue initialer Wert
- * @returns ein TWriteableSignal
+ * Function to create a WriteableSignal
+ * @param initialValue initial value
+ * @returns a TWriteableSignal
  */
 function signal<T = unknown>(initialValue?: T): TWriteableSignal<T> {
     let _value: T = initialValue;
@@ -22,15 +19,15 @@ function signal<T = unknown>(initialValue?: T): TWriteableSignal<T> {
     let _state: TSignalState = "working";
 
     /**
-     * Liefert den Wert des Signals 
-     * @param value der WErt des Signals
+     * Returns the value of the signal
+     * @param value the value of the signal
      * @returns 
      */
     const SIGNAL = function (value?: T) {
-        return _value
-    }
+        return _value;
+    };
 
-    // informiert alle Bindings über die neue Wertänderung
+    // informs all bindings about the new value change
     function notify(value, oldValue) {
         for (let binding of _bindings) {
             if (binding.state === "bound") {
@@ -42,16 +39,16 @@ function signal<T = unknown>(initialValue?: T): TWriteableSignal<T> {
         }
     }
 
-    // löscht alle Bindings, die bereits disposed wurden
+    // deletes all bindings that have already been disposed
     function cleanUpBindings() {
         _bindings = _bindings.filter(
             b => b.state !== "disposed"
-        )
+        );
     }
 
     /**
-     * Übergibt dem Signal einen neuen Wert
-     * @param value - der neue Wert des Signals
+     * Assigns a new value to the signal
+     * @param value - the new value of the signal
      * @returns 
      */
     SIGNAL.emit = (value?: T) => {
@@ -61,13 +58,13 @@ function signal<T = unknown>(initialValue?: T): TWriteableSignal<T> {
         _value = value as T;
         notify(_value, oldValue);
         return;
-    }
+    };
 
     /**
-     * Stellt ein Binding zu einem Signal her
-     * @param Function handler - Ein Handler der jedes Mal gerufen wird, wenn das Signal einen neuen Wert bekommt
-     * @param boolean instant - wenn true, wird das Binding sofort ausgelöst 
-     * @returns Ein Binding-Objekt
+     * Establishes a binding to a signal
+     * @param Function handler - A handler that is called every time the signal gets a new value
+     * @param boolean instant - if true, the binding will be triggered immediately
+     * @returns A Binding object
      */
     SIGNAL.bind = (handler: Function, instant = true): TBinding => {
         const binding = createBinding(handler, {
@@ -79,13 +76,13 @@ function signal<T = unknown>(initialValue?: T): TWriteableSignal<T> {
         }
         _bindings.push(binding);
         return; //TODO
-    }
+    };
 
     /**
-     * Stellt ein Binding zu einem Signal her welches nur ein einziges mal ausgeführt wird
-     * @param Function handler - Ein Handler der jedes Mal gerufen wird, wenn das Signal einen neuen Wert bekommt
-     * @param boolean instant - wenn true, wird das Binding sofort ausgelöst 
-     * @returns Ein Binding-Objekt
+     * Establishes a binding to a signal that is executed only once
+     * @param Function handler - A handler that is called every time the signal gets a new value
+     * @param boolean instant - if true, the binding will be triggered immediately
+     * @returns A Binding object
      */
     SIGNAL.once = (handler: Function, instant = true): TBinding => {
         const binding = createBinding(handler, {
@@ -100,42 +97,40 @@ function signal<T = unknown>(initialValue?: T): TWriteableSignal<T> {
         }
 
         return binding;
-    }
+    };
 
     /**
-     * Zerstört das Signal. Danach ist es nur noch lesbar, hat aber keine Funktion mehr
+     * Destroys the signal. After that, it is only readable but has no function anymore
      */
     SIGNAL.dispose = (): void => { // ok
         _state = "disposed";
-    }
+    };
 
     /**
-     * Pausiert das Signal. Solange es pausiert ist, ist es ohne Funktion.
+     * Pauses the signal. While paused, it is non-functional.
      */
     SIGNAL.suspend = (): void => { // ok
         if (_state !== "disposed")
             _state = "suspended";
-    }
+    };
 
     /**
-     * Reactiviert ein pausiertes Signal.
+     * Reactivates a paused signal.
      */
     SIGNAL.resume = (): void => { // ok 
         if (_state !== "disposed")
             _state = "working";
-    }
+    };
 
     /**
-     * Liefert den Zustand des Signals
-     * @returns der aktuelle Zustand des Signals
+     * Returns the state of the signal
+     * @returns the current state of the signal
      */
     SIGNAL.state = (): TSignalState => {
         return _state;
-    }
+    };
 
     return SIGNAL;
 }
 
-
-
-export { signal, TBinding, TWriteableSignal }
+export { signal, TBinding, TWriteableSignal };

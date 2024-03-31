@@ -3,7 +3,7 @@ import { TBinding } from "./binding";
 type TSignalState = "working" | "suspended" | "disposed";
 
 /**
- * Ein Signal ist ein reatives Element zur Datenhaltung
+ * A Signal is a reactive element for data management
  */
 type TSignal<T> = {
 
@@ -18,12 +18,12 @@ type TSignal<T> = {
 
     resume: () => void;
 
-    state: () => TSignalState
+    state: () => TSignalState;
 
     /**
-     * der Getter liefert den Wert des Signals
+     * The getter returns the value of the signal
      */
     (): T;
-}
+};
 
-export { TSignal, TSignalState }
+export { TSignal, TSignalState };

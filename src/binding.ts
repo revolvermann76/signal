@@ -1,19 +1,19 @@
 /**
- * Repräsentiert ein Binding auf ein Signal
+ * Represents a Binding to a Signal
  */
 type TBinding = {
     /**
-     * Ein Binding kann pausiert werden
+     * A Binding can be suspended
      */
     suspend: () => void;
 
     /**
-     * Fortsetzen eines pausierten Bindings
+     * Resuming a suspended Binding
      */
     resume: () => void;
 
     /**
-     * Zerstören eines Bindings
+     * Destroying a Binding
      */
     dispose: () => void;
 
@@ -23,7 +23,6 @@ type TBinding = {
 
     handler: Function;
 };
-
 
 function createBinding(
     handler: Function,
@@ -58,8 +57,7 @@ function createBinding(
         get handler() {
             return _handler;
         }
-    }
+    };
 }
 
-
-export { TBinding, createBinding }
+export { TBinding, createBinding };

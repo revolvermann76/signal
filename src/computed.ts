@@ -2,12 +2,12 @@ import { TSignal } from "./TSignal";
 import { signal } from "./signal";
 
 /**
- * Ein ComputedSignal ist ein Signal, dessen Wert durch Verknüpfung anderer Signals entsteht
+ * A ComputedSignal is a signal whose value is derived from the combination of other signals
  */
 type TComputedSignal<T> = TSignal<T>;
 
 /**
- * Function zum Erstellen eines ComputedSignals
+ * Function to create a ComputedSignal
  * @param computeFn 
  * @param trigger 
  * @returns 
@@ -16,66 +16,66 @@ function computed<T = unknown>(computeFn: Function, trigger: TSignal<unknown>[])
     const _signal = signal<T>();
 
     /**
-     * Liefert den Wert des Signals 
-     * @param value der WErt des Signals
+     * Returns the value of the signal 
+     * @param value the value of the signal
      * @returns 
      */
     const SIGNAL = function (): T {
         return _signal();
-    }
+    };
 
-    // berechnet den Wert des Signals neu
+    // recalculates the value of the signal
     function reCompute() {
         let result = computeFn();
         _signal.emit(result);
     }
 
-    // diese Signal wird an all seine Trigger angebunden
+    // this signal is bound to all its triggers
     trigger.forEach((trig: TSignal<unknown>) => {
         trig.bind(reCompute, false);
-    })
+    });
 
-    // initiale Berechnung des Wertes des Signals
+    // initial calculation of the value of the signal
     reCompute();
 
     /**
-     * Stellt ein Binding zu einem Signal her
-     * @param Function handler - Ein Handler der jedes Mal gerufen wird, wenn das Signal einen neuen Wert bekommt
-     * @param boolean instant - wenn true, wird das Binding sofort ausgelöst 
-     * @returns Ein Binding-Objekt
+     * Establishes a binding to a signal
+     * @param Function handler - A handler that is called every time the signal gets a new value
+     * @param boolean instant - if true, the binding will be triggered immediately 
+     * @returns A Binding object
      */
     SIGNAL.bind = _signal.bind;
 
     /**
-     * Stellt ein Binding zu einem Signal her welches nur ein einziges mal ausgeführt wird
-     * @param Function handler - Ein Handler der jedes Mal gerufen wird, wenn das Signal einen neuen Wert bekommt
-     * @param boolean instant - wenn true, wird das Binding sofort ausgelöst 
-     * @returns Ein Binding-Objekt
+     * Establishes a binding to a signal that is executed only once
+     * @param Function handler - A handler that is called every time the signal gets a new value
+     * @param boolean instant - if true, the binding will be triggered immediately 
+     * @returns A Binding object
      */
     SIGNAL.once = _signal.once;
 
     /**
-     * Zerstört das Signal. Danach ist es nur noch lesbar, hat aber keine Funktion mehr
+     * Destroys the signal. After that, it is only readable but has no function anymore
      */
     SIGNAL.dispose = _signal.dispose;
 
     /**
-     * Pausiert das Signal. Solange es pausiert ist, ist es ohne Funktion.
+     * Pauses the signal. While paused, it is non-functional.
      */
     SIGNAL.suspend = _signal.suspend;
 
     /**
-     * Reactiviert ein pausiertes Signal.
+     * Reactivates a paused signal.
      */
     SIGNAL.resume = _signal.resume;
 
     /**
-     * Liefert den Zustand des Signals
-     * @returns der aktuelle Zustand des Signals
+     * Returns the state of the signal
+     * @returns the current state of the signal
      */
     SIGNAL.state = _signal.state;
 
     return SIGNAL;
 }
 
-export { TComputedSignal, computed }
+export { TComputedSignal, computed };
