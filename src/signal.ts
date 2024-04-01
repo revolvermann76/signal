@@ -29,9 +29,9 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
     let _bindings: TBinding[] = [];
     let _state: TSignalState = "working";
 
-    options = options || {};
-    options.stopEmit = options.stopEmit || "never";
-    options.handlerSuccessTest = options.handlerSuccessTest || defaultHandlerSuccessTest;
+    const _options = options || {};
+    _options.stopEmit = _options.stopEmit || "never";
+    _options.handlerSuccessTest = _options.handlerSuccessTest || defaultHandlerSuccessTest;
 
     /**
      * Returns the value of the signal
@@ -90,7 +90,7 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
             handler(_value);
         }
         _bindings.push(binding);
-        return; //TODO
+        return binding;
     };
 
     /**
