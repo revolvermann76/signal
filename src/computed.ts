@@ -1,5 +1,5 @@
 import { TSignal } from "./TSignal";
-import { signal } from "./signal";
+import { TSignalOptions, signal } from "./signal";
 
 /**
  * A ComputedSignal is a signal whose value is derived from the combination of other signals
@@ -12,8 +12,8 @@ type TComputedSignal<T> = TSignal<T>;
  * @param trigger 
  * @returns 
  */
-function computed<T = unknown>(computeFn: Function, trigger: TSignal<unknown>[]): TComputedSignal<T> {
-    const _signal = signal<T>();
+function computed<T = unknown>(computeFn: Function, trigger: TSignal<unknown>[], options?: TSignalOptions): TComputedSignal<T> {
+    const _signal = signal<T>(undefined, options);
 
     /**
      * Returns the value of the signal 
@@ -74,6 +74,8 @@ function computed<T = unknown>(computeFn: Function, trigger: TSignal<unknown>[])
      * @returns the current state of the signal
      */
     SIGNAL.state = _signal.state;
+
+    SIGNAL.guard = _signal.guard;
 
     return SIGNAL;
 }

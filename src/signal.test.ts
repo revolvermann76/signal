@@ -1,7 +1,7 @@
 import { signal, computed } from "./index";
 
 describe('testing signal', () => {
-    test('signal generator is there', () => {
+    test('signal generator exists', () => {
         expect(typeof signal).toBe("function");
     });
 
@@ -10,20 +10,21 @@ describe('testing signal', () => {
         expect(typeof s).toBe("function");
     });
 
-    test('set initial value and read the same value', () => {
+    test('set and read initial value', () => {
         const testValue = "Whatever";
         const s = signal(testValue);
         expect(s()).toBe(testValue);
     });
 
-    test('emited a signal and read the same value', () => {
+    test('emitted a signal and read the same value', () => {
         const s = signal();
         const testValue = "Whatever";
-        s.emit(testValue);
-        expect(s()).toBe(testValue);
+        return s.emit(testValue).then(data => {
+            expect(s()).toBe(testValue);
+        });
     });
 
-    test('check if simple subscription works', () => {
+    test('subscription works', () => {
         const testValue = "Whatever";
         const s = signal();
         return (new Promise((res, rej) => {
@@ -39,24 +40,31 @@ describe('testing signal', () => {
 });
 
 describe('testing computed', () => {
-    test('computed generator is there', () => {
+    test('computed generator exists', () => {
         expect(typeof computed).toBe("function");
     });
 
     const s1 = signal<number>(4);
     const s2 = signal<number>(3);
     const c = computed(() => { return s1() * s2() }, [s1, s2]);
-    test('we created a computing computed', () => {
+    test('computed value from two other signals', () => {
         expect(c()).toBe(12);
     });
 
     test('computed updates correctly', () => {
-        s2.emit(4);
-        expect(c()).toBe(16);
+        return (new Promise((res, rej) => {
+            c.bind(value => {
+                res(value);
+            }, false)
+            s2.emit(4)
+        })).then(data => {
+            expect(data).toBe(16);
+        });
+
     });
 
 
-    test('check if simple subscription works', () => {
+    test('subscription works', () => {
         return (new Promise((res, rej) => {
             c.bind(value => {
                 res(value);
@@ -66,7 +74,5 @@ describe('testing computed', () => {
             expect(data).toBe(8);
         });
     });
-
-
 });
 

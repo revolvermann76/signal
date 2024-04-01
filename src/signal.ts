@@ -5,15 +5,17 @@ import { TBinding, createBinding } from "./binding";
  * A WriteableSignal is a signal whose value can be actively set
  */
 type TWriteableSignal<T> = TSignal<T> & {
-    emit: (value: T) => void;
+    emit: (value: T) => Promise<void>;
 };
 
 type TSignalOptions = {
     stopEmit?: "never" | "fail-any" | "fail-all";
-    handlerSuccessTest?: (unknown) => boolean;
+    guardSuccessTest?: (unknown) => boolean;
 }
 
-const defaultHandlerSuccessTest = (val) => {
+type TGuard<T = unknown> = (newValue: T, oldValue: T) => unknown;
+
+const defaultGuardSuccessTest = (val) => {
     return val === true || typeof val === "undefined";
 }
 
@@ -28,10 +30,11 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
     let _value: T = initialValue;
     let _bindings: TBinding[] = [];
     let _state: TSignalState = "working";
+    let _guards: TGuard[] = [];
 
     const _options = options || {};
     _options.stopEmit = _options.stopEmit || "never";
-    _options.handlerSuccessTest = _options.handlerSuccessTest || defaultHandlerSuccessTest;
+    _options.guardSuccessTest = _options.guardSuccessTest || defaultGuardSuccessTest;
 
     /**
      * Returns the value of the signal
@@ -42,14 +45,77 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
         return _value;
     };
 
+    async function checkGuards(value, oldValue): Promise<void> {
+
+        // if we have no guards or emit should never be stopped we return succesful
+        if (_options.stopEmit === "never" || _guards.length === 0) {
+            return;
+        }
+
+        let responses = [];
+        let promises: Promise<unknown>[] = [];
+
+        // let's collect all responses of all guards
+        for (let guard of _guards) {
+            responses.push(guard(value, oldValue));
+        }
+
+        // some responses are no promises
+        // run through responses and transform them into promises if needed
+        for (let i = 0; i < responses.length; i++) {
+            const response = responses[i];
+            if (response instanceof Promise) {
+                promises.push(response);
+                continue;
+            }
+            const success = _options.guardSuccessTest(response);
+            promises.push(
+                success ? Promise.resolve(response) : Promise.reject(response)
+            );
+        }
+
+        // collect all successes and all fails
+        const successes = [];
+        const fails = [];
+        await Promise.allSettled(promises).then((results) => {
+            results.forEach(
+                (result) => {
+                    if (result.status === "fulfilled") {
+                        successes.push(result.value);
+                    } else {
+                        fails.push(result.reason);
+                    }
+                }
+            )
+        });
+
+        if (_options.stopEmit === "fail-any") {
+            // even one fail stops the emitting
+            if (fails.length) {
+                throw fails;
+            }
+        } else if (_options.stopEmit === "fail-all") {
+            // we only have a real fail if everything fails
+            if (successes.length === 0) {
+                throw fails;
+            }
+        }
+
+        // if we reach this point, the emitting is approved
+        return;
+    }
+
     // informs all bindings about the new value change
     function notify(value, oldValue) {
+        // run through all bindings and collect the responses
         for (let binding of _bindings) {
-            if (binding.state === "bound") {
-                binding.handler(_value);
-                if (binding.once) {
-                    binding.dispose();
-                }
+            if (binding.state !== "bound") {
+                continue
+            }
+
+            binding.handler(value, oldValue)
+            if (binding.once) {
+                binding.dispose();
             }
         }
     }
@@ -60,20 +126,6 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
             b => b.state !== "disposed"
         );
     }
-
-    /**
-     * Assigns a new value to the signal
-     * @param value - the new value of the signal
-     * @returns 
-     */
-    SIGNAL.emit = (value?: T) => {
-        cleanUpBindings();
-        if (_state === "disposed" || _state === "suspended") { return; }
-        const oldValue = _value;
-        _value = value as T;
-        notify(_value, oldValue);
-        return;
-    };
 
     /**
      * Establishes a binding to a signal
@@ -89,8 +141,43 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
         if (instant) {
             handler(_value);
         }
+
         _bindings.push(binding);
         return binding;
+    };
+
+    /**
+     * Destroys the signal. After that, it is only readable but has no function anymore
+     */
+    SIGNAL.dispose = (): void => { // ok
+        _state = "disposed";
+    };
+
+
+    /**
+     * Assigns a new value to the signal
+     * @param value - the new value of the signal
+     * @returns 
+     */
+    SIGNAL.emit = async (value?: T): Promise<void> => {
+        cleanUpBindings();
+        if (_state === "disposed" || _state === "suspended") { return; }
+        try {
+            const oldValue = _value;
+            await checkGuards(value, oldValue);
+            _value = value;
+            notify(_value, oldValue);
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    /**
+     * Register a fn to stop a signal
+     * @param guard 
+     */
+    SIGNAL.guard = (guard: TGuard): void => {
+        _guards.push(guard);
     };
 
     /**
@@ -115,21 +202,6 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
     };
 
     /**
-     * Destroys the signal. After that, it is only readable but has no function anymore
-     */
-    SIGNAL.dispose = (): void => { // ok
-        _state = "disposed";
-    };
-
-    /**
-     * Pauses the signal. While paused, it is non-functional.
-     */
-    SIGNAL.suspend = (): void => { // ok
-        if (_state !== "disposed")
-            _state = "suspended";
-    };
-
-    /**
      * Reactivates a paused signal.
      */
     SIGNAL.resume = (): void => { // ok 
@@ -145,7 +217,15 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
         return _state;
     };
 
+    /**
+     * Pauses the signal. While paused, it is non-functional.
+     */
+    SIGNAL.suspend = (): void => { // ok
+        if (_state !== "disposed")
+            _state = "suspended";
+    };
+
     return SIGNAL;
 }
 
-export { signal, TBinding, TWriteableSignal };
+export { signal, TBinding, TWriteableSignal, TSignalOptions, TGuard };

@@ -9,6 +9,7 @@ type TSignal<T> = {
 
     bind: (handler: Function, instant?: boolean) => TBinding;
 
+    guard: (handler: Function) => void;
 
     once: (Function, boolean?) => TBinding;
 

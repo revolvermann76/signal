@@ -5,12 +5,12 @@
   - fail-any - wenn nur ein Handler failed, wird der emit() nicht ausgeführt
   - fail-all - nur wenn alle Handler failen, wird der emit() nicht ausgeführt
 
-- listenerSuccessTest - eine Methode, die beschreibt, wann ein Handler als Success gilt
+- guardSuccessTest - eine Methode, die beschreibt, wann ein Handler als Success gilt
   - default: (val) => { return val === true || typeof val === "undefined"}
 
+Guards implementieren
 
-
-Options implementieren
-Tests schreiben
+Tests schreiben für guards
 Readme schreiben
-Option für ComputedSignals?
+
+evtl ein debounce welches schnell aufeinander folgende Signals in der Menge begrenzt
