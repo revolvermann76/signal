@@ -26,7 +26,6 @@ const defaultGuardSuccessTest = (val) => {
  * @returns a TWriteableSignal
  */
 function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWriteableSignal<T> {
-
     let _value: T = initialValue;
     let _bindings: TBinding[] = [];
     let _state: TSignalState = "working";
@@ -66,12 +65,12 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
             const response = responses[i];
             if (response instanceof Promise) {
                 promises.push(response);
-                continue;
+            } else {
+                const success = _options.guardSuccessTest(response);
+                promises.push(
+                    success ? Promise.resolve(response) : Promise.reject(response)
+                );
             }
-            const success = _options.guardSuccessTest(response);
-            promises.push(
-                success ? Promise.resolve(response) : Promise.reject(response)
-            );
         }
 
         // collect all successes and all fails
@@ -92,12 +91,12 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
         if (_options.stopEmit === "fail-any") {
             // even one fail stops the emitting
             if (fails.length) {
-                throw fails;
+                throw new Error(JSON.stringify(fails));
             }
         } else if (_options.stopEmit === "fail-all") {
             // we only have a real fail if everything fails
             if (successes.length === 0) {
-                throw fails;
+                throw new Error(JSON.stringify(fails))
             }
         }
 
@@ -110,10 +109,14 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
         // run through all bindings and collect the responses
         for (let binding of _bindings) {
             if (binding.state !== "bound") {
-                continue
+                continue;
             }
 
-            binding.handler(value, oldValue)
+            try {
+                binding.handler(value, oldValue)
+            } catch (error) {
+                // do nothing
+            }
             if (binding.once) {
                 binding.dispose();
             }
@@ -161,7 +164,10 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
      */
     SIGNAL.emit = async (value?: T): Promise<void> => {
         cleanUpBindings();
-        if (_state === "disposed" || _state === "suspended") { return; }
+        if (_state === "disposed" || _state === "suspended") {
+            return; // nothing happens
+        };
+
         try {
             const oldValue = _value;
             await checkGuards(value, oldValue);
@@ -228,4 +234,4 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
     return SIGNAL;
 }
 
-export { signal, TBinding, TWriteableSignal, TSignalOptions, TGuard };
+export { signal, TWriteableSignal, TSignalOptions, TGuard };

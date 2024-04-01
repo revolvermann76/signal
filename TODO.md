@@ -8,9 +8,6 @@
 - guardSuccessTest - eine Methode, die beschreibt, wann ein Handler als Success gilt
   - default: (val) => { return val === true || typeof val === "undefined"}
 
-Guards implementieren
-
-Tests schreiben für guards
 Readme schreiben
 
 evtl ein debounce welches schnell aufeinander folgende Signals in der Menge begrenzt

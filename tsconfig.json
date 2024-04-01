@@ -28,6 +28,6 @@
     "exclude": [
         "./dist/**/*.ts",
         "./node_modules/**/*.ts",
-        "./**/*.stories.ts"
+        "./**/*.test.ts"
     ],
 }
