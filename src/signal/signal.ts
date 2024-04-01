@@ -91,12 +91,12 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
         if (_options.stopEmit === "fail-any") {
             // even one fail stops the emitting
             if (fails.length) {
-                throw new Error(JSON.stringify(fails));
+                throw fails;
             }
         } else if (_options.stopEmit === "fail-all") {
             // we only have a real fail if everything fails
             if (successes.length === 0) {
-                throw new Error(JSON.stringify(fails))
+                throw fails
             }
         }
 

@@ -183,7 +183,8 @@ describe('testing signal', () => {
         }, false);
 
         return (new Promise((res, rej) => {
-            s.emit(testValue).then(() => { }, () => {
+            s.emit(testValue).then(() => { }, (err) => {
+                console.log(err)
                 res("successfully blocked")
             })
         })).then((result) => {
@@ -219,18 +220,26 @@ describe('testing signal', () => {
     test('guard blocking works (promise)', () => {
         const testValue = "Whatever";
         const s = signal<string>("", { stopEmit: "fail-any" });
+        let error;
         s.guard((value, oldValue) => {
             return new Promise((res, rej) => {
                 rej("bad mood");
             });
-        })
+        });
+
+        s.guard((value, oldValue) => {
+            return new Promise((res, rej) => {
+                rej("harsh wheather");
+            });
+        });
 
         s.bind(value => {
             // will never happen
         }, false);
 
         return (new Promise((res, rej) => {
-            s.emit(testValue).then(() => { }, () => {
+            s.emit(testValue).then(() => { }, (err) => {
+                console.log(err);
                 res("successfully blocked")
             })
         })).then((result) => {
