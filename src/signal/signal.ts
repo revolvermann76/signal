@@ -37,13 +37,13 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
 
     /**
      * Returns the value of the signal
-     * @param value the value of the signal
-     * @returns 
+     * @returns the value of the signal
      */
-    const SIGNAL = function (value?: T) {
+    const SIGNAL = function () {
         return _value;
     };
 
+    // ...
     async function checkGuards(value, oldValue): Promise<void> {
 
         // if we have no guards or emit should never be stopped we return succesful
@@ -105,7 +105,7 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
     }
 
     // informs all bindings about the new value change
-    function notify(value, oldValue) {
+    function notify(value, oldValue): void {
         // run through all bindings and collect the responses
         for (let binding of _bindings) {
             if (binding.state !== "bound") {
@@ -124,7 +124,7 @@ function signal<T = unknown>(initialValue?: T, options?: TSignalOptions): TWrite
     }
 
     // deletes all bindings that have already been disposed
-    function cleanUpBindings() {
+    function cleanUpBindings(): void {
         _bindings = _bindings.filter(
             b => b.state !== "disposed"
         );
