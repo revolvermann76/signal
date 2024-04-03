@@ -73,7 +73,7 @@ mySignal.guard((value)=>{ // a promising guard
 
 ## computed signals
 
-signal the gets its value by other signals
+signal that gets its value by other signals
 
 ```typescript
 const signal1 = signal<number>(4);
