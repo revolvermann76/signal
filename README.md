@@ -79,7 +79,7 @@ signal that gets its value by other signals
 const signal1 = signal<number>(4);
 const signal2 = signal<number>(3);
 const myComputedSignal = computed(
-	() => { // a function that calculates the value of this
+	() => { // a function that calculates the value of this signal
 		return signal1() * signal2() 
 	}, 
 	[signal1, signal2] // name the triggering signals
